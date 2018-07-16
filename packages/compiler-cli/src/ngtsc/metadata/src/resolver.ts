@@ -253,7 +253,8 @@ const UNARY_OPERATORS = new Map<ts.SyntaxKind, (a: any) => any>([
 interface Context {
   absoluteModuleName: string|null;
   scope: Scope;
-  foreignFunctionResolver?(node: ts.FunctionDeclaration|ts.MethodDeclaration): ts.Expression|null;
+  foreignFunctionResolver?
+      (node: ts.FunctionDeclaration|ts.MethodDeclaration|ts.FunctionExpression): ts.Expression|null;
 }
 
 class StaticInterpreter {
@@ -502,7 +503,7 @@ class StaticInterpreter {
             value = this.visitExpression(member.value, context);
           } else if (member.implementation !== null) {
             value = new NodeReference(member.implementation, absoluteModuleName);
-          } else {
+          } else if (member.node) {
             value = new NodeReference(member.node, absoluteModuleName);
           }
         }
@@ -643,8 +644,9 @@ class StaticInterpreter {
 }
 
 function isFunctionOrMethodDeclaration(node: ts.Node): node is ts.FunctionDeclaration|
-    ts.MethodDeclaration {
-  return ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node);
+    ts.MethodDeclaration|ts.FunctionExpression {
+  return ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node) ||
+      ts.isFunctionExpression(node);
 }
 
 function literal(value: ResolvedValue): any {
